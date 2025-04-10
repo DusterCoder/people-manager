@@ -1,14 +1,13 @@
-import { useTranslation } from "react-i18next";
 import "./App.css";
 import CustomAppBar from "./components/AppBar";
-import { ThemeProvider, CssBaseline } from "@mui/material";
+import { ThemeProvider, CssBaseline, Box } from "@mui/material";
 import { lightTheme, darkTheme } from "./assets/theme.ts"; // il tuo file con i temi
 import { useState, useMemo } from "react";
+import PeopleTable from "./components/PeopleTable.tsx";
 interface AppPropos {
   handleLanguageChange: (lng: string) => void;
 }
 function App({ handleLanguageChange }: AppPropos) {
-  const { t } = useTranslation("common");
   const [mode, setMode] = useState<"light" | "dark">("light");
 
   const theme = useMemo(
@@ -27,6 +26,9 @@ function App({ handleLanguageChange }: AppPropos) {
           handleThemeChange={handleThemeChange}
           handleLanguageChange={handleLanguageChange}
         ></CustomAppBar>
+        <Box sx={{ display: "flex", flexDirection: "column", width: "100%" }}>
+          <PeopleTable />
+        </Box>
       </ThemeProvider>
     </>
   );
