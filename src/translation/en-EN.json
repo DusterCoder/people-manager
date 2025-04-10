@@ -1,0 +1,39 @@
+{
+  "main": {
+    "title": "People List",
+    "search": "Search...",
+    "table": {
+      "header": {
+        "id": "ID",
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "dob": "Date of Birth"
+      },
+      "actions": {
+        "edit": "Edit",
+        "delete": "Delete"
+      }
+    },
+    "noData": "No data available"
+  },
+  "edit": {
+    "title": "Edit Person",
+    "form": {
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "dob": "Date of Birth"
+    },
+    "buttons": {
+      "save": "Save",
+      "cancel": "Cancel"
+    }
+  },
+  "delete": {
+    "title": "Delete Person",
+    "message": "Are you sure you want to delete this person?",
+    "buttons": {
+      "confirm": "Confirm",
+      "cancel": "Cancel"
+    }
+  }
+}

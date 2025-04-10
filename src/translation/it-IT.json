@@ -1,0 +1,39 @@
+{
+  "main": {
+    "title": "Elenco Persone",
+    "search": "Cerca...",
+    "table": {
+      "header": {
+        "id": "ID",
+        "firstName": "Nome",
+        "lastName": "Cognome",
+        "dob": "Data di Nascita"
+      },
+      "actions": {
+        "edit": "Modifica",
+        "delete": "Elimina"
+      }
+    },
+    "noData": "Nessun dato disponibile"
+  },
+  "edit": {
+    "title": "Modifica Persona",
+    "form": {
+      "firstName": "Nome",
+      "lastName": "Cognome",
+      "dob": "Data di Nascita"
+    },
+    "buttons": {
+      "save": "Salva",
+      "cancel": "Annulla"
+    }
+  },
+  "delete": {
+    "title": "Elimina Persona",
+    "message": "Sei sicuro di voler eliminare questa persona?",
+    "buttons": {
+      "confirm": "Conferma",
+      "cancel": "Annulla"
+    }
+  }
+}

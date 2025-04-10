@@ -1,35 +1,35 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useTranslation } from "react-i18next";
+import "./App.css";
+import CustomAppBar from "./components/AppBar";
+import { ThemeProvider, CssBaseline } from "@mui/material";
+import { lightTheme, darkTheme } from "./assets/theme.ts"; // il tuo file con i temi
+import { useState, useMemo } from "react";
+interface AppPropos {
+  handleLanguageChange: (lng: string) => void;
+}
+function App({ handleLanguageChange }: AppPropos) {
+  const { t } = useTranslation("common");
+  const [mode, setMode] = useState<"light" | "dark">("light");
 
-function App() {
-  const [count, setCount] = useState(0)
+  const theme = useMemo(
+    () => (mode === "light" ? lightTheme : darkTheme),
+    [mode]
+  );
 
+  const handleThemeChange = () => {
+    setMode((prev) => (prev === "light" ? "dark" : "light"));
+  };
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <ThemeProvider theme={theme}>
+        <CssBaseline /> {/* Reset MUI */}
+        <CustomAppBar
+          handleThemeChange={handleThemeChange}
+          handleLanguageChange={handleLanguageChange}
+        ></CustomAppBar>
+      </ThemeProvider>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
