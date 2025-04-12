@@ -1,13 +1,19 @@
 import * as React from "react";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import {
+  DataGrid, GridColDef, GridFilterModel,
+  GetApplyQuickFilterFn,
+  GridToolbarQuickFilter,
+} from "@mui/x-data-grid";
 import IconButton from "@mui/material/IconButton";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { Box, Card, CardContent, TextField, Theme, Typography, useMediaQuery } from "@mui/material";
+import { Box, Card, CardContent, Theme, Typography, useMediaQuery } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { UsersService } from "../services/users.service";
 import { useEffect, useState } from "react";
 import { User } from "../types/user";
+import EditUserModal from "./EditUserModal";
+import DeleteUserModal from "./DeleteUserModal";
 
 
 
@@ -16,59 +22,87 @@ function PeopleTable() {
     theme.breakpoints.down("sm")
   );
   const [rows, setRows] = useState<User[]>([]);
-const [page, setPage] = useState(0); // ATTENZIONE: DataGrid usa zero-based
-const [pageSize, setPageSize] = useState(10);
-const [rowCount, setRowCount] = useState(0);
-const [loading, setLoading] = useState(false);
+  const [paginationModel, setPaginationModel] = React.useState({
+    pageSize: 5,
+    page: 0,
+  });
+  const [rowCount, setRowCount] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState<GridFilterModel>({
+    items: [],
+  });
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const { t } = useTranslation("common");
+  const basePath = "main.table.header."
 
-const loadData = async () => {
-  try {
+  const columns: GridColDef[] = [
+    { field: "id", headerName: t(basePath + "id"), flex: 1, },
+    { field: "firstName", headerName: t(basePath + "firstName"), flex: 1 },
+    { field: "lastName", headerName: t(basePath + "lastName"), flex: 1 },
+    {
+      field: "birthDate", headerName: t(basePath + "dob"), flex: 1
+    },
+    {
+      field: "actions",
+      headerName: "",
+      sortable: false,
+      filterable: false,
+      width: 100,
+      renderCell: (params) => (
+        <>
+          <IconButton onClick={() => { handleEditClick(params.row) }} size="small">
+            <EditIcon fontSize="small" />
+          </IconButton>
+          <IconButton onClick={() => { handleDeleteClick(params.row) }} size="small">
+            <DeleteIcon fontSize="small" />
+          </IconButton>
+        </>
+      ),
+    },
+  ];
+  const handleEditClick = (user: User) => {
+    setSelectedUser(user);
+    setIsEditModalOpen(true);
+  };
+
+  const handleDeleteClick = (user: User) => {
+    setSelectedUser(user);
+    setIsDeleteModalOpen(true);
+  };
+  const onFilterChange = React.useCallback((filterModel: GridFilterModel) => {
+
     setLoading(true);
-    const res = await UsersService.getAll({ page: page + 1, pageSize });
-    setRows(res.results);
-    setRowCount(res.totalResults);
-  } catch (error) {
-    console.error("Errore durante il fetch:", error);
-  } finally {
-    setLoading(false);
-  }
-};
+    // Here you save the data you need from the filter model
+    setSearch(filterModel);
+  }, []);
 
-useEffect(() => {
-  loadData();
-}, [page, pageSize]);
-    const { t } = useTranslation("common");
-   
-    useEffect(() => {
-      UsersService.getAll({ page: 1, pageSize: 100 })
-        .then((res) => setRows(res.results))
-        .catch((err) =>
-          console.error("Errore durante il caricamento utenti:", err)
-        );
-    }, []);
-   const columns: GridColDef[] = [
-     { field: "id", headerName: "Id", flex: 1 },
-     { field: "firstName", headerName: "Nome", flex: 1 },
-     { field: "lastName", headerName: "Cognome", flex: 1 },
-     { field: "birthDate", headerName: "Data di nascita", flex: 1 },
-     {
-       field: "actions",
-       headerName: "",
-       sortable: false,
-       filterable: false,
-       width: 100,
-       renderCell: () => (
-         <>
-           <IconButton size="small" color="primary">
-             <EditIcon fontSize="small" />
-           </IconButton>
-           <IconButton size="small" color="error">
-             <DeleteIcon fontSize="small" />
-           </IconButton>
-         </>
-       ),
-     },
-   ];
+  function QuickSearchToolbar() {
+    return (
+      <Box
+      >
+        <GridToolbarQuickFilter debounceMs={300} autoFocus sx={{ width: "100%", marginRight: "auto" }} />
+      </Box>
+    );
+  }
+  const loadData = async () => {
+    try {
+      const res = await UsersService.getAll({ filter: search?.quickFilterValues?.[0] ?? "", page: paginationModel.page + 1, pageSize: paginationModel.pageSize });
+      setRows(res.results);
+      setRowCount(res.totalResults);
+    } catch (error) {
+      console.error("Errore durante il fetch:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    setLoading(true);
+    loadData();
+  }, [paginationModel.page, paginationModel.pageSize, search]);
+
   return (
     <Box
       sx={{
@@ -81,6 +115,30 @@ useEffect(() => {
         height: "90vh", // per espandere all’altezza del contenitore padre
       }}
     >
+      {selectedUser && (
+        <EditUserModal
+          open={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          onSave={async (updatedUser) => {
+            await UsersService.update(selectedUser.id, updatedUser)
+            // Aggiorna l'utente nella tua lista
+            loadData();
+          }}
+          user={selectedUser}
+        />
+      )}
+
+      {selectedUser && (
+        <DeleteUserModal
+          open={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onDelete={async () => {
+            await UsersService.remove(selectedUser.id);
+            loadData();
+          }}
+          user={selectedUser}
+        />
+      )}
       <Typography
         noWrap
         sx={{
@@ -93,16 +151,8 @@ useEffect(() => {
         {t("main.title")}
       </Typography>
 
-      <TextField
-        placeholder="Cerca"
-        fullWidth
-        size="small"
-        sx={{ mb: 2 }}
-        value={"null"}
-      />
-
       {isMobile ? (
-        <Box display="flex" flexDirection="column" gap={2}>
+        <Box display="flex" flexDirection="column" gap={2} sx={{ marginTop: 10 }} >
           {rows.map((row) => (
             <Card variant="outlined" key={row.id}>
               <CardContent>
@@ -131,20 +181,22 @@ useEffect(() => {
       ) : (
         <Box>
           <DataGrid rows={rows}
-        columns={columns}
-        rowCount={rowCount}
-        loading={loading}
-        paginationMode="server"
-        page={page}
-        pageSize={pageSize}
-        onPageChange={(newPage) => setPage(newPage)}
-        onPageSizeChange={(newPageSize) => {
-          setPageSize(newPageSize);
-          setPage(0); // reset alla prima pagina
-        }}
-        paginationModel={{ page, pageSize }}
-        pageSizeOptions={[5, 10, 20, 50]}
-        disableRowSelectionOnClick
+            sx={{
+              border: 1, borderColor: "var(--DataGrid-rowBorderColor)",
+              borderRadius: 2,
+            }}
+            filterMode="server"
+
+            onFilterModelChange={onFilterChange}
+            columns={columns}
+            rowCount={rowCount}
+            loading={loading}
+            paginationMode="server"
+            pageSizeOptions={[5, 10, 20, 50]}
+            paginationModel={paginationModel}
+            onPaginationModelChange={setPaginationModel}
+            disableRowSelectionOnClick
+            slots={{ toolbar: QuickSearchToolbar }}
           />
         </Box>
       )}
