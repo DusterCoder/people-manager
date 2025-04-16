@@ -1,19 +1,20 @@
 import * as React from "react";
 import {
-  DataGrid, GridColDef, GridFilterModel,
-  GetApplyQuickFilterFn,
-  GridToolbarQuickFilter,
+  DataGrid, GridColDef,
+  GridRenderCellParams
 } from "@mui/x-data-grid";
 import IconButton from "@mui/material/IconButton";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { Box, Card, CardContent, Theme, Typography, useMediaQuery } from "@mui/material";
+import { Box, Card, CardContent, Pagination, SxProps, Theme, Typography, useMediaQuery } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { UsersService } from "../services/users.service";
 import { useEffect, useState } from "react";
 import { User } from "../types/user";
 import EditUserModal from "./EditUserModal";
 import DeleteUserModal from "./DeleteUserModal";
+import SearchBar from "./SearchBar";
+import useDebounce from "../services/useDebounce";
 
 
 
@@ -28,21 +29,37 @@ function PeopleTable() {
   });
   const [rowCount, setRowCount] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [search, setSearch] = useState<GridFilterModel>({
-    items: [],
-  });
+  const [search, setSearch] = useState<string>('');
+  const debouncedSearch = useDebounce(search, 200);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  const [userEdited, setUserEdited] = useState(false);
   const { t } = useTranslation("common");
   const basePath = "main.table.header."
-
+  const actionButton = (params: GridRenderCellParams | { row: User }, sx?: SxProps<Theme> | undefined) => {
+    return <>
+      <IconButton sx={sx} onClick={() => { handleEditClick(params.row) }} size="small">
+        <EditIcon fontSize="small" />
+      </IconButton>
+      <IconButton sx={sx} onClick={() => { handleDeleteClick(params.row) }} size="small">
+        <DeleteIcon fontSize="small" />
+      </IconButton>
+    </>
+  }
   const columns: GridColDef[] = [
     { field: "id", headerName: t(basePath + "id"), flex: 1, },
     { field: "firstName", headerName: t(basePath + "firstName"), flex: 1 },
     { field: "lastName", headerName: t(basePath + "lastName"), flex: 1 },
     {
-      field: "birthDate", headerName: t(basePath + "dob"), flex: 1
+      field: "birthDate", headerName: t(basePath + "dob"), flex: 1,
+      valueFormatter: UsersService.getFormattedDate,
+      sortComparator: (v1, v2) => {
+        const date1 = new Date(v1);
+        const date2 = new Date(v2);
+        return date1.getTime() - date2.getTime();
+      }
     },
     {
       field: "actions",
@@ -51,14 +68,7 @@ function PeopleTable() {
       filterable: false,
       width: 100,
       renderCell: (params) => (
-        <>
-          <IconButton onClick={() => { handleEditClick(params.row) }} size="small">
-            <EditIcon fontSize="small" />
-          </IconButton>
-          <IconButton onClick={() => { handleDeleteClick(params.row) }} size="small">
-            <DeleteIcon fontSize="small" />
-          </IconButton>
-        </>
+        actionButton(params)
       ),
     },
   ];
@@ -71,37 +81,29 @@ function PeopleTable() {
     setSelectedUser(user);
     setIsDeleteModalOpen(true);
   };
-  const onFilterChange = React.useCallback((filterModel: GridFilterModel) => {
-
-    setLoading(true);
-    // Here you save the data you need from the filter model
-    setSearch(filterModel);
-  }, []);
-
-  function QuickSearchToolbar() {
-    return (
-      <Box
-      >
-        <GridToolbarQuickFilter debounceMs={300} autoFocus sx={{ width: "100%", marginRight: "auto" }} />
-      </Box>
-    );
-  }
-  const loadData = async () => {
-    try {
-      const res = await UsersService.getAll({ filter: search?.quickFilterValues?.[0] ?? "", page: paginationModel.page + 1, pageSize: paginationModel.pageSize });
-      setRows(res.results);
-      setRowCount(res.totalResults);
-    } catch (error) {
-      console.error("Errore durante il fetch:", error);
-    } finally {
-      setLoading(false);
-    }
+  const handlePageChange = (event: React.ChangeEvent<unknown>, page: number) => {
+    setPaginationModel((prev) => ({
+      ...prev,
+      page: page - 1, // MUI Pagination è 1-based, DataGrid è 0-based
+    }));
   };
 
   useEffect(() => {
+    const loadData = async () => {
+      try {
+        const res = await UsersService.getAll({ filter: debouncedSearch ?? "", page: paginationModel.page + 1, pageSize: paginationModel.pageSize });
+        setRows(res.results);
+        setRowCount(res.totalResults);
+      } catch (error) {
+        console.error("Errore durante il fetch:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     setLoading(true);
     loadData();
-  }, [paginationModel.page, paginationModel.pageSize, search]);
+  }, [paginationModel.page, paginationModel.pageSize, debouncedSearch, userEdited]);
 
   return (
     <Box
@@ -109,7 +111,7 @@ function PeopleTable() {
         p: 4,
         display: "flex",
         flexDirection: "column",
-        backgroundColor: "white",
+        backgroundColor: "theme.palette.background.paper",
         boxShadow: 0,
         width: { xs: "45vh", sm: "190vh" },
         height: "90vh", // per espandere all’altezza del contenitore padre
@@ -122,7 +124,7 @@ function PeopleTable() {
           onSave={async (updatedUser) => {
             await UsersService.update(selectedUser.id, updatedUser)
             // Aggiorna l'utente nella tua lista
-            loadData();
+            setUserEdited(true);
           }}
           user={selectedUser}
         />
@@ -134,7 +136,7 @@ function PeopleTable() {
           onClose={() => setIsDeleteModalOpen(false)}
           onDelete={async () => {
             await UsersService.remove(selectedUser.id);
-            loadData();
+            setUserEdited(true);
           }}
           user={selectedUser}
         />
@@ -142,7 +144,8 @@ function PeopleTable() {
       <Typography
         noWrap
         sx={{
-          color: "black",
+          color: "theme.palette.text.primary",
+          minHeight: 30,
           fontSize: 24,
           mb: 2,
           textAlign: "left",
@@ -152,7 +155,12 @@ function PeopleTable() {
       </Typography>
 
       {isMobile ? (
-        <Box display="flex" flexDirection="column" gap={2} sx={{ marginTop: 10 }} >
+        <Box display="flex" flexDirection="column" gap={2}  >
+          <Box sx={{ mb: 2 }}>
+            <SearchBar value={search} onChange={(changedValue: string) => {
+              setSearch(changedValue);
+            }} />
+          </Box>
           {rows.map((row) => (
             <Card variant="outlined" key={row.id}>
               <CardContent>
@@ -167,27 +175,39 @@ function PeopleTable() {
                   </Box>
                 ))}
                 <Box display="flex" justifyContent="space-between" mt={2}>
-                  <IconButton size="small" >
-                    <EditIcon fontSize="small" />
-                  </IconButton>
-                  <IconButton size="small" >
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
+                  {actionButton({ row }, {
+                    border: "solid 1px",
+                    paddingLeft: 4.5,
+                    paddingRight: 4.5,
+                    borderRadius: 0.5,
+                  })}
                 </Box>
               </CardContent>
             </Card>
           ))}
+          <Box display="flex" justifyContent="center" mt={2}>
+            <Pagination
+              count={Math.ceil(rowCount / paginationModel.pageSize)}
+              page={paginationModel.page + 1}
+              onChange={handlePageChange}
+              color="primary"
+              shape="rounded"
+            />
+          </Box>
         </Box>
       ) : (
         <Box>
+          <Box sx={{ mb: 2 }}>
+            <SearchBar value={search} onChange={(changedValue: string) => {
+              setSearch(changedValue);
+            }} />
+          </Box>
           <DataGrid rows={rows}
             sx={{
               border: 1, borderColor: "var(--DataGrid-rowBorderColor)",
-              borderRadius: 2,
+              borderRadius: 1,
             }}
             filterMode="server"
-
-            onFilterModelChange={onFilterChange}
             columns={columns}
             rowCount={rowCount}
             loading={loading}
@@ -196,7 +216,6 @@ function PeopleTable() {
             paginationModel={paginationModel}
             onPaginationModelChange={setPaginationModel}
             disableRowSelectionOnClick
-            slots={{ toolbar: QuickSearchToolbar }}
           />
         </Box>
       )}

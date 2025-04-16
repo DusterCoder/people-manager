@@ -1,4 +1,3 @@
-import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.tsx";
@@ -24,13 +23,12 @@ const handleLanguageChange = (lng: string) => {
   i18next.changeLanguage(lng);
 };
 createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <I18nextProvider i18n={i18next}>
-      <App
-        handleLanguageChange={(lng: string) => {
-          handleLanguageChange(lng);
-        }}
-      />
-    </I18nextProvider>
-  </StrictMode>
+
+  <I18nextProvider i18n={i18next}>
+    <App
+      handleLanguageChange={(lng: string) => {
+        handleLanguageChange(lng);
+      }}
+    />
+  </I18nextProvider>
 );

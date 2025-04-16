@@ -21,7 +21,14 @@ export const UsersService = {
     const res = await axios.get(`${API_BASE}`, { params });
     return res.data;
   },
+  getFormattedDate(inputDate: string) {
+    const date = new Date(inputDate);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = String(date.getFullYear()).slice(-2); // solo ultime due cifre
 
+    return `${day}/${month}/${year}`;
+  },
   async getById(id: string): Promise<User> {
     const res = await axios.get(`${API_BASE}/${id}`);
     return res.data;

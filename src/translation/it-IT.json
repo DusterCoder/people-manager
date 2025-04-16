@@ -24,13 +24,13 @@
       "dob": "Data di Nascita"
     },
     "buttons": {
-      "save": "Salva",
+      "save": "Modifica",
       "cancel": "Annulla"
     }
   },
   "delete": {
     "title": "Elimina Persona",
-    "message": "Sei sicuro di voler eliminare questa persona?",
+    "message": "Sei sicuro di voler eliminare la persona",
     "buttons": {
       "confirm": "Conferma",
       "cancel": "Annulla"
