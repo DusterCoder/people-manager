@@ -17,20 +17,22 @@ const sharedThemeOptions = {
         root: {
           borderRadius: 12,
           padding: "8px 16px",
-        },containedPrimary: {
-      backgroundColor: "#1976d2",
-      color: "#fff",
-      "&:hover": {
-        backgroundColor: "#115293", 
-      },
-    },
-    containedSecondary: {
-      backgroundColor: "#",
-      color: "#fff",
-      "&:hover": {
-        backgroundColor: "#6d1b7b",
-      },
-    },
+        },
+        containedPrimary: {
+          backgroundColor: "#1976d2",
+          color: "#fff",
+          "&:hover": {
+            backgroundColor: "#115293",
+          },
+        },
+        containedSecondary: {
+          backgroundColor: "#FF0000",
+
+          color: "#fff",
+          "&:hover": {
+            backgroundColor: "#FF0000",
+          },
+        },
       },
     },
     MuiCard: {
@@ -62,7 +64,7 @@ export const lightTheme = createTheme({
       main: "#1976d2",
     },
     secondary: {
-      main: "#9c27b0",
+      main: "#FF0000",
     },
     background: {
       default: "#f9f9f9",
@@ -83,7 +85,7 @@ export const darkTheme = createTheme({
       main: "#90caf9",
     },
     secondary: {
-      main: "#ce93d8",
+      main: "#FF0000",
     },
     background: {
       default: "#121212",

@@ -1,54 +1,91 @@
-# React + TypeScript + Vite
+# People Manager
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A responsive, internationalized React-based dashboard for managing people data.  
+This project includes features such as pagination, server-side search, modal editing/deletion, toast notifications, and data visualization via MUI DataGrid.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Getting Started
 
-## Expanding the ESLint configuration
+### Prerequisites
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Make sure you have **Node.js v23** installed.
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+You can check your Node version with:
+
+```bash
+node -v
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Installation
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Clone the repository and install dependencies:
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+```bash
+git clone https://github.com/DusterCoder/people-manager.git
+cd people-manager
+npm install
+```
+
+### Run the application
+
+```bash
+npm run dev
+```
+
+Then open your browser and go to:
+
+```
+http://localhost:3000
+```
+
+---
+
+## 🌍 Features
+
+- ⚡ Fast & responsive UI built with **React** and **MUI**
+- 🌐 Full i18n support via **react-i18next**
+- 🔍 Server-side pagination & filtering
+- 🧾 Editable user list with modals (edit/delete)
+- 🔔 Error and success feedback via toast notifications (`react-hot-toast`)
+- 📱 Mobile-friendly layout with adaptive design
+- 🧠 Debounced search input to reduce API calls
+
+---
+
+## 🛠️ Stack
+
+- **React**
+- **TypeScript**
+- **MUI (Material UI)**
+- **react-i18next**
+- **react-hot-toast**
+- **Vite** (or your current dev server)
+
+---
+
+## 📂 Project Structure (simplified)
+
+```
+src/
+│
+├── components/
+│   ├── PeopleTable.tsx
+│   ├── EditUserModal.tsx
+│   ├── DeleteUserModal.tsx
+│   ├── SearchBar.tsx
+│   └── AppBar.tsx
+│
+├── services/
+│   ├── users.service.ts
+│   └── useDebounce.ts
+│
+├── types/
+│   └── user.ts
+│
+├── i18n/
+│   ├── en-EN.json
+│   └── it-IT.json
+│
+└── App.tsx
 ```

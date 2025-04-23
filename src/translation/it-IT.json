@@ -12,7 +12,8 @@
       "actions": {
         "edit": "Modifica",
         "delete": "Elimina"
-      }
+      },
+      "error":"Si è verificato un errore durante il caricamento dei dati"
     },
     "noData": "Nessun dato disponibile"
   },
@@ -26,7 +27,8 @@
     "buttons": {
       "save": "Modifica",
       "cancel": "Annulla"
-    }
+    },
+    "error":"Si è verificato un errore durante la modifica dei dati."
   },
   "delete": {
     "title": "Elimina Persona",
@@ -34,6 +36,7 @@
     "buttons": {
       "confirm": "Conferma",
       "cancel": "Annulla"
-    }
+    },
+    "error":"Si è verificato un errore durante l'eliminazione della persona."
   }
 }

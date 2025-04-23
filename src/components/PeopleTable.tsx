@@ -6,7 +6,7 @@ import {
 import IconButton from "@mui/material/IconButton";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { Box, Card, CardContent, Pagination, SxProps, Theme, Typography, useMediaQuery } from "@mui/material";
+import { Box, Card, CardContent, Pagination, SxProps, Theme, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { UsersService } from "../services/users.service";
 import { useEffect, useState } from "react";
@@ -15,29 +15,28 @@ import EditUserModal from "./EditUserModal";
 import DeleteUserModal from "./DeleteUserModal";
 import SearchBar from "./SearchBar";
 import useDebounce from "../services/useDebounce";
-
+import toast, { Toaster } from 'react-hot-toast';
 
 
 function PeopleTable() {
+  const theme = useTheme();
   const isMobile = useMediaQuery((theme: Theme) =>
     theme.breakpoints.down("sm")
   );
+  const { t } = useTranslation("common");
+  const basePath = "main.table.header."
+
   const [rows, setRows] = useState<User[]>([]);
-  const [paginationModel, setPaginationModel] = React.useState({
-    pageSize: 5,
-    page: 0,
-  });
+  const [paginationModel, setPaginationModel] = useState({ pageSize: 5, page: 0 });
   const [rowCount, setRowCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState<string>('');
   const debouncedSearch = useDebounce(search, 200);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-
   const [userEdited, setUserEdited] = useState(false);
-  const { t } = useTranslation("common");
-  const basePath = "main.table.header."
   const actionButton = (params: GridRenderCellParams | { row: User }, sx?: SxProps<Theme> | undefined) => {
     return <>
       <IconButton sx={sx} onClick={() => { handleEditClick(params.row) }} size="small">
@@ -94,9 +93,11 @@ function PeopleTable() {
         const res = await UsersService.getAll({ filter: debouncedSearch ?? "", page: paginationModel.page + 1, pageSize: paginationModel.pageSize });
         setRows(res.results);
         setRowCount(res.totalResults);
-      } catch (error) {
-        console.error("Errore durante il fetch:", error);
-      } finally {
+        setError(null)
+      } catch (e) {
+        setError(t("main.table.error"));
+      }
+      finally {
         setLoading(false);
       }
     };
@@ -104,6 +105,20 @@ function PeopleTable() {
     setLoading(true);
     loadData();
   }, [paginationModel.page, paginationModel.pageSize, debouncedSearch, userEdited]);
+  useEffect(() => {
+    if (error) {
+
+      toast.error(error, {
+        duration: 4000,
+        position: "top-right",
+        style: {
+          color: theme.palette.text.primary,
+          backgroundColor: theme.palette.background.paper,
+        }
+      });
+
+    }
+  }, [error]);
 
   return (
     <Box
@@ -114,17 +129,25 @@ function PeopleTable() {
         backgroundColor: "theme.palette.background.paper",
         boxShadow: 0,
         width: { xs: "45vh", sm: "190vh" },
-        height: "90vh", // per espandere all’altezza del contenitore padre
+        height: "90vh",
       }}
     >
+      <Toaster />
       {selectedUser && (
         <EditUserModal
           open={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
           onSave={async (updatedUser) => {
-            await UsersService.update(selectedUser.id, updatedUser)
-            // Aggiorna l'utente nella tua lista
-            setUserEdited(true);
+            try {
+              setLoading(true);
+              await UsersService.update(selectedUser.id, updatedUser)
+              setUserEdited(true);
+              setError(null)
+            } catch (e) {
+              setError(t("edit.error"));
+            } finally {
+              setLoading(false);
+            }
           }}
           user={selectedUser}
         />
@@ -135,8 +158,17 @@ function PeopleTable() {
           open={isDeleteModalOpen}
           onClose={() => setIsDeleteModalOpen(false)}
           onDelete={async () => {
-            await UsersService.remove(selectedUser.id);
-            setUserEdited(true);
+            try {
+              setLoading(true);
+              await UsersService.remove(selectedUser.id);
+              setUserEdited(true);
+              setError(null)
+            } catch (e) {
+
+              setError(t("delete.error"));
+            } finally {
+              setLoading(false);
+            }
           }}
           user={selectedUser}
         />
@@ -155,40 +187,59 @@ function PeopleTable() {
       </Typography>
 
       {isMobile ? (
-        <Box display="flex" flexDirection="column" gap={2}  >
-          <Box sx={{ mb: 2 }}>
+        <Box display="flex" flexDirection="column" gap={2} >
+          <Box >
             <SearchBar value={search} onChange={(changedValue: string) => {
               setSearch(changedValue);
             }} />
           </Box>
-          {rows.map((row) => (
-            <Card variant="outlined" key={row.id}>
-              <CardContent>
-                {columns.map((col) => (
-                  <Box key={col.field} sx={{ mb: 1, display: "flex", flexDirection: "column", width: "100%" }}>
-                    <Typography fontSize={12} color="text.secondary">
-                      {col.headerName?.toUpperCase()}
-                    </Typography>
-                    <Typography>
-                      {row[col.field as keyof typeof row]}
-                    </Typography>
+          <Box
+            sx={{
+              overflowY: "auto",
+              maxHeight: "calc(100vh - 280px)", // Adatta in base a header + searchbar
+              pr: 1,
+              mb: 2,
+              flex: 1,
+              minHeight: 0
+            }}
+          >
+            {rows.map((row) => (
+              <Card variant="outlined" key={row.id} sx={{
+                mb: 2,
+              }}>
+                <CardContent>
+                  {columns.map((col) => (
+                    <Box key={col.field} sx={{ mb: 1, display: "flex", flexDirection: "column", width: "100%", alignItems: "flex-start" }}>
+                      <Typography fontSize={10} color="text.secondary">
+                        {col.headerName?.toUpperCase()}
+                      </Typography>
+                      <Typography fontSize={10}>
+                        {col.valueFormatter
+                          ? UsersService.getFormattedDate(row[col.field as keyof typeof row])
+                          : row[col.field as keyof typeof row]}
+                      </Typography>
+                    </Box>
+                  ))}
+                  <Box display="flex" justifyContent="space-between" mt={2}>
+                    {actionButton({ row }, {
+                      border: "solid 1px",
+                      width: "48%",
+                      paddingLeft: 4.5,
+                      paddingRight: 4.5,
+
+                      borderRadius: 0.5,
+                    })}
                   </Box>
-                ))}
-                <Box display="flex" justifyContent="space-between" mt={2}>
-                  {actionButton({ row }, {
-                    border: "solid 1px",
-                    paddingLeft: 4.5,
-                    paddingRight: 4.5,
-                    borderRadius: 0.5,
-                  })}
-                </Box>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            ))}
+
+          </Box>
           <Box display="flex" justifyContent="center" mt={2}>
             <Pagination
               count={Math.ceil(rowCount / paginationModel.pageSize)}
               page={paginationModel.page + 1}
+              size="small"
               onChange={handlePageChange}
               color="primary"
               shape="rounded"
@@ -218,8 +269,9 @@ function PeopleTable() {
             disableRowSelectionOnClick
           />
         </Box>
-      )}
-    </Box>
+      )
+      }
+    </Box >
   );
 }
 

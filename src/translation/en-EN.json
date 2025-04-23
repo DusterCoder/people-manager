@@ -12,7 +12,8 @@
       "actions": {
         "edit": "Edit",
         "delete": "Delete"
-      }
+      },
+       "error":"An error occurred while loading data."
     },
     "noData": "No data available"
   },
@@ -26,7 +27,8 @@
     "buttons": {
       "save": "Modfy",
       "cancel": "Cancel"
-    }
+    },
+    "error":"An error occurred while updating data."
   },
   "delete": {
     "title": "Delete Person",
@@ -34,6 +36,7 @@
     "buttons": {
       "confirm": "Confirm",
       "cancel": "Cancel"
-    }
+    },
+    "error":"An error occurred while deleting the person."
   }
 }
