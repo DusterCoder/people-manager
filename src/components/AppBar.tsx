@@ -228,27 +228,6 @@ function CustomAppBar({
                 setLanguage(event.target.checked ? "en" : "it");
               }}
             />
-            <IconButton
-              edge="end"
-              aria-label="account of current user"
-              aria-controls={menuId}
-              aria-haspopup="true"
-              onClick={handleProfileMenuOpen}
-              color="inherit"
-              sx={{ display: { xs: "none", sm: "block" } }}
-            >
-              <AccountCircle />
-            </IconButton>
-            <IconButton
-              sx={{ display: { xs: "block", sm: "none" } }}
-              aria-label="show more"
-              aria-controls={mobileMenuId}
-              aria-haspopup="true"
-              onClick={handleMobileMenuOpen}
-              color="inherit"
-            >
-              <AccountCircle />
-            </IconButton>
           </Box>
         </Toolbar>
       </AppBar>

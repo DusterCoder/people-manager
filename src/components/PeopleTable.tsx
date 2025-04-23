@@ -210,10 +210,10 @@ function PeopleTable() {
                 <CardContent>
                   {columns.map((col) => (
                     <Box key={col.field} sx={{ mb: 1, display: "flex", flexDirection: "column", width: "100%", alignItems: "flex-start" }}>
-                      <Typography fontSize={10} color="text.secondary">
+                      <Typography fontSize={12} color="text.secondary">
                         {col.headerName?.toUpperCase()}
                       </Typography>
-                      <Typography fontSize={10}>
+                      <Typography fontSize={12}>
                         {col.valueFormatter
                           ? UsersService.getFormattedDate(row[col.field as keyof typeof row])
                           : row[col.field as keyof typeof row]}
